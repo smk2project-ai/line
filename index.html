@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>公式LINEのご登録</title>
+<meta name="robots" content="noindex">
+<!--
+  ご契約者様専用サポート【公式LINE】の登録ページ（LIFF 2012122819-xI2sFrfF のエンドポイント）。
+  積立申込の完了画面・控えメールの https://liff.line.me/<LIFF ID>?t=<トークン> から開く。
+  LINE の ID トークンを受け口GAS（MK2/gas/custline）へ送り、その人の LINE ID を申込と結ぶ。
+-->
+<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  :root {
+    --bg: #f7f5ee; --card: #ffffff; --text: #3b3226; --muted: #7a6f60;
+    --gold: #b8913f; --green: #06c755; --line: #e6dfcf; --err: #b3261e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 16px 40px; min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    background: linear-gradient(180deg, #eef3e4 0%, var(--bg) 40%); color: var(--text);
+  }
+  .card {
+    max-width: 440px; margin: 0 auto; background: var(--card); border: 1px solid var(--line);
+    border-radius: 16px; padding: 28px 22px; text-align: center; box-shadow: 0 4px 18px rgba(80, 60, 20, .06);
+  }
+  .icon { width: 96px; height: 96px; border-radius: 50%; display: block; margin: 0 auto 14px; }
+  h1 { font-size: 19px; margin: 0 0 6px; }
+  .sub { color: var(--gold); font-size: 13px; letter-spacing: .08em; margin-bottom: 18px; }
+  p { line-height: 1.8; margin: 0 0 14px; font-size: 15px; }
+  .name { font-size: 20px; font-weight: 700; margin: 6px 0 4px; }
+  .note { color: var(--muted); font-size: 13px; }
+  .err { color: var(--err); }
+  .btn {
+    display: block; width: 100%; padding: 15px; margin: 18px 0 8px; border: 0; border-radius: 10px;
+    background: var(--green); color: #fff; font-size: 16px; font-weight: 700; text-decoration: none; cursor: pointer;
+  }
+  .btn:disabled { opacity: .6; }
+  .spin { width: 28px; height: 28px; margin: 10px auto; border: 3px solid var(--line); border-top-color: var(--gold); border-radius: 50%; animation: s 1s linear infinite; }
+  @keyframes s { to { transform: rotate(360deg); } }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="card">
+  <img class="icon" src="icon.jpg" alt="">
+  <h1>公式LINEのご登録</h1>
+  <div class="sub">ご契約者様専用サポート</div>
+
+  <div id="loading"><div class="spin"></div><p class="note">読み込んでいます…</p></div>
+
+  <div id="confirm" hidden>
+    <p>お申込みありがとうございます。<br>こちらのLINEを、次のお名前で登録します。</p>
+    <div class="name"><span id="name"></span> 様</div>
+    <p class="note">ご本人様のLINEで開いていることをご確認ください。</p>
+    <button class="btn" id="go">このLINEで登録する</button>
+  </div>
+
+  <div id="done" hidden>
+    <p><b id="doneName"></b> 様<br>ご登録ありがとうございます。</p>
+    <p id="doneFriend">今後は公式LINEで、お手続きやお支払いのご案内をお送りいたします。</p>
+    <div id="addBox" hidden>
+      <p>最後に、公式LINEを友だち追加してください。</p>
+      <a class="btn" id="add" href="https://line.me/R/ti/p/@089gtwqx">友だち追加する</a>
+    </div>
+    <button class="btn" id="close" hidden>閉じる</button>
+  </div>
+
+  <div id="error" hidden>
+    <p class="err" id="errText"></p>
+    <a class="btn" href="https://line.me/R/ti/p/@089gtwqx">公式LINEを開く</a>
+  </div>
+</div>
+
+<script>
+  var LIFF_ID = '2012122819-xI2sFrfF';
+  var API = 'https://script.google.com/macros/s/AKfycbzNLo66sfOXyCTvs_VIfp1pb8aEvdccUmkXFKA_55wDcjetN2vZE3GTxqnNSDmeuqwb/exec';
+  var $ = function (id) { return document.getElementById(id); };
+  var token = '';
+
+  function show(id) {
+    ['loading', 'confirm', 'done', 'error'].forEach(function (x) { $(x).hidden = x !== id; });
+  }
+  function fail(msg) { $('errText').textContent = msg; show('error'); }
+
+  // GAS は text/plain で送ると事前確認なしで受け取れる
+  function post(body) {
+    return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json(); });
+  }
+
+  liff.init({ liffId: LIFF_ID }).then(function () {
+    token = new URLSearchParams(location.search).get('t') || '';
+    if (!token) return fail('このページは、お申込み後のご案内から開いてください。');
+    if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return; }
+    return post({ action: 'applyInfo', t: token }).then(function (r) {
+      if (!r.ok) return fail(r.error);
+      $('name').textContent = r.name;
+      show('confirm');
+    });
+  }).catch(function () {
+    fail('読み込みに失敗しました。LINEアプリで開き直してください。');
+  });
+
+  $('go').addEventListener('click', function () {
+    var btn = $('go');
+    btn.disabled = true;
+    btn.textContent = '登録しています…';
+    post({ action: 'applyLink', t: token, idToken: liff.getIDToken() }).then(function (r) {
+      if (!r.ok) return fail(r.error);
+      $('doneName').textContent = r.name;
+      // 友だちかどうかは LINE から直接確かめる（受け口の結果より新しい）
+      return liff.getFriendship().then(function (f) { return f.friendFlag; }, function () { return r.friend; })
+        .then(function (friend) {
+          $('addBox').hidden = !!friend;
+          $('doneFriend').hidden = !friend;
+          $('close').hidden = !(friend && liff.isInClient());
+          show('done');
+        });
+    }).catch(function () {
+      btn.disabled = false;
+      btn.textContent = 'このLINEで登録する';
+      fail('うまくいきませんでした。時間をおいて、もう一度開き直してください。');
+    });
+  });
+
+  $('close').addEventListener('click', function () { liff.closeWindow(); });
+</script>
+</body>
+</html>
