@@ -95,16 +95,20 @@
     token = new URLSearchParams(location.search).get('t') || '';
     if (!token) return fail('このページは、お申込み後のご案内から開いてください。');
     if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return; }
-    return post({ action: 'applyInfo', t: token }).then(function (r) {
+    return post({ action: 'applyInfo', t: token, idToken: liff.getIDToken() }).then(function (r) {
       if (!r.ok) return fail(r.error);
       $('name').textContent = r.name;
-      show('confirm');
+      // すでに別の名前で結び付いている LINE（アドバイザーが開いたときなど）だけ、ボタンで確認してもらう
+      if (r.needConfirm) return show('confirm');
+      register();
     });
   }).catch(function () {
     fail('読み込みに失敗しました。LINEアプリで開き直してください。');
   });
 
-  $('go').addEventListener('click', function () {
+  $('go').addEventListener('click', register);
+
+  function register() {
     var btn = $('go');
     btn.disabled = true;
     btn.textContent = '登録しています…';
@@ -124,7 +128,7 @@
       btn.textContent = 'このLINEで登録する';
       fail('うまくいきませんでした。時間をおいて、もう一度開き直してください。');
     });
-  });
+  }
 
   $('close').addEventListener('click', function () { liff.closeWindow(); });
 </script>
