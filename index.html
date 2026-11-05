@@ -62,10 +62,14 @@
     <p><b id="doneName"></b> 様<br>ご登録ありがとうございます。</p>
     <p id="doneFriend">今後は公式LINEで、お手続きやお支払いのご案内をお送りいたします。</p>
     <div id="addBox" hidden>
-      <p>最後に、公式LINEを友だち追加してください。</p>
+      <p>公式LINEを友だち追加してください。</p>
       <a class="btn" id="add" href="https://line.me/R/ti/p/@089gtwqx">友だち追加する</a>
     </div>
-    <button class="btn" id="close" hidden>閉じる</button>
+    <div id="sendBox">
+      <p><b id="sendStep">最後に</b>、担当者がお客様を確認できるよう、下のボタンからお名前を送信してください。</p>
+      <a class="btn" id="send" href="#">お名前を送信する</a>
+      <p class="note">トーク画面がお名前の入った状態で開きます。そのまま「送信」を押してください。</p>
+    </div>
   </div>
 
   <div id="error" hidden>
@@ -115,12 +119,14 @@
     post({ action: 'applyLink', t: token, idToken: liff.getIDToken() }).then(function (r) {
       if (!r.ok) return fail(r.error);
       $('doneName').textContent = r.name;
+      // 名前が入った状態でトークを開く。1通送ってもらうと、管理画面のチャット・連絡先に出て表示名を書き換えられる
+      $('send').href = 'https://line.me/R/oaMessage/%40089gtwqx/?' + encodeURIComponent(r.name);
       // 友だちかどうかは LINE から直接確かめる（受け口の結果より新しい）
       return liff.getFriendship().then(function (f) { return f.friendFlag; }, function () { return r.friend; })
         .then(function (friend) {
           $('addBox').hidden = !!friend;
           $('doneFriend').hidden = !friend;
-          $('close').hidden = !(friend && liff.isInClient());
+          $('sendStep').textContent = friend ? '最後に' : '友だち追加のあと';
           show('done');
         });
     }).catch(function () {
@@ -129,8 +135,6 @@
       fail('うまくいきませんでした。時間をおいて、もう一度開き直してください。');
     });
   }
-
-  $('close').addEventListener('click', function () { liff.closeWindow(); });
 </script>
 </body>
 </html>
