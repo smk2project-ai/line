@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>積立お申込み</title>
+<meta property="og:title" content="積立お申込み">
+<meta property="og:description" content="積立のお申込みはこちらから">
+<meta name="robots" content="noindex">
+<!--
+  積立申込サイトの入口（公式LINEの準備リスト・組織管理「申込前」から開く。2026-11-20）。本番画面（GAS MK2/gas/application）をこのページの中に埋め込んで出す。
+  script.google.com を直接開くと、スマホでGoogleアカウントを複数ログインしている人は「現在、ファイルを開くことができません」になるため（予約サイトと同じ対処）。
+  ?a=担当コード などはそのまま引き継ぐ。
+-->
+<style>
+  html, body { margin: 0; height: 100%; background: #f5f6f8; }
+  iframe { display: block; border: 0; width: 100%; height: 100%; }
+  .alt { position: fixed; left: 0; right: 0; bottom: 0; text-align: center; font: 12px -apple-system, "Hiragino Sans", sans-serif; padding: 6px; background: rgba(245,246,248,.95); color: #5f6b7a; }
+  .alt a { color: #1a73e8; }
+</style>
+</head>
+<body>
+<iframe id="app" title="積立お申込み" allow="clipboard-write; camera"></iframe>
+<noscript><p style="padding:20px">JavaScript を有効にしてください。</p></noscript>
+<script>
+  var DEST = 'https://script.google.com/macros/s/AKfycbxjAn3egUoAm38uYWtnrhjTG-U9_iPjRoeU_00oKcY9-KUIkD9H3PCv7GbGlaaqdsxJ/exec';
+  document.getElementById('app').src = DEST + location.search + location.hash;
+</script>
+</body>
+</html>
