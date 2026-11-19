@@ -9,7 +9,8 @@
   ご契約者様専用サポート【公式LINE】の登録ページ（LIFF 2012122819-xI2sFrfF のエンドポイント）。
   積立申込の完了画面・控えメールの https://liff.line.me/<LIFF ID>?t=<トークン> から開く。
   積立・相談予約（MK2/gas/booking）の完了画面・確認メールの ?t=b<予約の鍵> からも開く → 準備リストがLINEに届く（2026-11-18）。
-  ?t= なし＝お客様登録（2026-11-19）：アドバイザーが組織管理で出すQR（?a=担当&r=紹介者&m=a|b）。お名前・紹介者・3問 → 準備リスト → 進め方 → Zoom予約（custline Entry.js）。
+  ?t= なし＝お客様登録（2026-11-19）：アドバイザーが組織管理で出すQR（?a=担当&r=紹介者&m=a|b|c&z=1|0）。お名前・紹介者・3問 → 準備リスト → 進め方 → 次のボタン（custline Entry.js）。
+    進め方 a＝Zoomでまとめて（内山さんの予約）／b＝今から申込サイト／c＝担当アドバイザーと日時を決める（担当の予約ページ。予約サイトで「申込」を受け付けている人だけ出す）
   LINE の ID トークンを受け口GAS（MK2/gas/custline）へ送り、その人の LINE ID を申込と結ぶ。
 -->
 <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -130,11 +131,12 @@
     <form>
       <span class="lbl">お申込みの進め方</span>
       <label class="opt"><input type="radio" name="mode" value="a"><b>Zoomでまとめて申し込む</b><small>サポート担当と一緒に、入力からお支払い・本申込まで（約60分）</small></label>
-      <label class="opt"><input type="radio" name="mode" value="b"><b>担当アドバイザーと申込フォームを入力する</b><small id="enBDesc">入力したあと、本申込の前に確認のZoomを予約します</small></label>
+      <label class="opt"><input type="radio" name="mode" value="b"><b>今から担当アドバイザーと申込フォームを入力する</b><small id="enBDesc">このあと積立申込サイトを開きます。入力のあと、本申込の前に確認のZoomを予約します</small></label>
+      <label class="opt" id="enCOpt" hidden><input type="radio" name="mode" value="c"><b>準備をしてから、担当アドバイザーと日時を決めて入力する</b><small id="enCDesc">担当アドバイザーと申込フォームを入力する日時を予約します。入力のあと、本申込の前に確認のZoomを予約します</small></label>
     </form>
     <p class="err" id="enErr2" hidden></p>
     <button class="btn" type="button" id="enBook">Zoomの日時を選ぶ</button>
-    <p class="note" id="enBNote" hidden>担当アドバイザーと申込フォームを入力したあと、確認のZoomを予約します。それまでに、LINEの準備リストをご準備ください。</p>
+    <p class="note" id="enBNote" hidden></p>
     <a class="btn" id="enClose" href="https://line.me/R/ti/p/@089gtwqx" hidden>トーク画面へ戻る</a>
   </div>
 
@@ -181,19 +183,21 @@
   $('go').addEventListener('click', register);
 
   /* ---------- お客様登録 ---------- */
-  var en = { r: '', a: '', mode: 'a', z: '', key: '', bookUrl: '' };
+  var en = { r: '', a: '', mode: 'a', z: '', key: '', next: null, advBook: false };
+  function modeKey(v) { return v === 'b' || v === 'c' ? v : 'a'; }
   function radio(name) { var x = document.querySelector('input[name=' + name + ']:checked'); return x ? x.value : ''; }
   function setRadio(name, v) { var x = document.querySelector('input[name=' + name + '][value="' + v + '"]'); if (x) x.checked = true; }
   function entryStart(qs) {
     $('title').textContent = 'お客様のご登録'; document.title = 'お客様のご登録';
-    en.r = qs.get('r') || ''; en.a = qs.get('a') || ''; en.mode = qs.get('m') === 'b' ? 'b' : 'a'; en.z = qs.get('z') || '';
-    // 確認Zoomなしのアドバイザー（z=0）は、Bの説明からZoomを外す（11/19）
-    if (en.z === '0') { $('enBDesc').textContent = '担当アドバイザーと一緒に、お申込みのお手続きを進めます'; $('enBNote').textContent = '担当アドバイザーと申込フォームを入力します。それまでに、LINEの準備リストをご準備ください。'; }
+    en.r = qs.get('r') || ''; en.a = qs.get('a') || ''; en.mode = modeKey(qs.get('m')); en.z = qs.get('z') || '';
+    // 確認Zoomなしのアドバイザー（z=0）は、B・Cの説明からZoomを外す（11/19）
+    if (en.z === '0') { $('enBDesc').textContent = 'このあと積立申込サイトを開いて、担当アドバイザーと一緒に入力します'; $('enCDesc').textContent = '担当アドバイザーと申込フォームを入力する日時を予約します'; }
     return post({ action: 'entryInfo', r: en.r, a: en.a, m: en.mode, idToken: liff.getIDToken() }).then(function (r) {
       if (!r.ok) return fail(r.error);
       if (r.intro && r.intro.name) { $('enIntroName').textContent = r.intro.name; $('enIntroFixed').hidden = false; }
       else { $('enIntro').hidden = false; en.r = ''; }
       if (r.adv && r.adv.name) { $('enAdvName').textContent = r.adv.name; $('enAdvBox').hidden = false; }
+      en.advBook = !!r.advBook; $('enCOpt').hidden = !en.advBook;
       var p = r.entry;
       if (p) {   // 前に登録したLINE：入れた内容を出す（直して送り直せる）
         $('enName').value = p.name; $('enKana').value = p.kana;
@@ -201,6 +205,7 @@
         if (!r.intro && p.introName) $('enIntro').value = p.introName;
         if (!qs.get('m')) en.mode = p.mode;
       }
+      if (en.mode === 'c' && !en.advBook) en.mode = 'b';
       setRadio('mode', en.mode);
       show('enForm');
     });
@@ -217,22 +222,25 @@
     var btn = $('enGo'); btn.disabled = true; btn.textContent = '送っています…';
     post(f).then(function (r) {
       if (!r.ok) { $('enErr').textContent = r.error; $('enErr').hidden = false; return; }
-      en.key = r.key; en.bookUrl = r.bookUrl;
+      en.key = r.key; en.next = r.next;
       $('enDoneName').textContent = r.name;
       // 入れたお名前をトークにも残す（管理画面のチャットで分かるように）。できない環境では何もしない
       try { if (liff.isInClient()) liff.sendMessages([{ type: 'text', text: r.msg }]).catch(function () {}); } catch (e) {}
       return liff.getFriendship().then(function (x) { return x.friendFlag; }, function () { return r.friend; }).then(function (friend) {
         $('enSent').hidden = !friend; $('enAdd').hidden = !!friend;
-        setRadio('mode', en.mode); modeView(r.booked);
+        setRadio('mode', en.mode); modeView();
         show('enMode');
       });
     }).catch(function () {
       $('enErr').textContent = 'うまくいきませんでした。時間をおいて、もう一度お試しください。'; $('enErr').hidden = false;
     }).finally(function () { btn.disabled = false; btn.textContent = '次へ（準備リストを受け取る）'; });
   });
-  function modeView(booked) {
-    var b = radio('mode') === 'b';
-    $('enBook').hidden = b || booked; $('enBNote').hidden = !b; $('enClose').hidden = !b && !booked;
+  // 次のボタン：a＝Zoomの日時／b＝積立申込サイト／c＝担当アドバイザーとの日時（受け口が決めた next をそのまま出す）
+  function modeView() {
+    var nx = en.next;
+    $('enBook').hidden = !(nx && nx.url); if (nx && nx.label) $('enBook').textContent = nx.label;
+    $('enBNote').hidden = !(nx && nx.note); $('enBNote').textContent = nx && nx.note ? nx.note : '';
+    $('enClose').hidden = !!(nx && nx.url);
   }
   document.querySelectorAll('input[name=mode]').forEach(function (x) {
     x.addEventListener('change', function () {
@@ -240,14 +248,14 @@
       $('enErr2').hidden = true;
       post({ action: 'entryMode', idToken: liff.getIDToken(), key: en.key, mode: en.mode }).then(function (r) {
         if (!r.ok) { $('enErr2').textContent = r.error; $('enErr2').hidden = false; return; }
-        en.bookUrl = r.bookUrl; modeView(r.booked);
+        en.next = r.next; modeView();
       });
-      modeView(false);
+      en.next = null; $('enBook').hidden = true; $('enBNote').hidden = false; $('enBNote').textContent = '切り替えています…'; $('enClose').hidden = true;
     });
   });
   $('enBook').addEventListener('click', function () {
-    if (!en.bookUrl) return;
-    location.href = en.bookUrl;   // 予約サイト（内山さん・予約内容が選ばれた状態、名前は入れ直さない）
+    if (!en.next || !en.next.url) return;
+    location.href = en.next.url;   // 予約サイト（名前は入れ直さない）か積立申込サイト（担当・紹介者・お名前入り）
   });
 
   function register() {
