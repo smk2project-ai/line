@@ -130,7 +130,7 @@
     <form>
       <span class="lbl">お申込みの進め方</span>
       <label class="opt"><input type="radio" name="mode" value="a"><b>Zoomでまとめて申し込む</b><small>サポート担当と一緒に、入力からお支払い・本申込まで（約60分）</small></label>
-      <label class="opt"><input type="radio" name="mode" value="b"><b>担当アドバイザーと申込フォームを入力する</b><small>入力したあと、本申込の前に確認のZoomを予約します</small></label>
+      <label class="opt"><input type="radio" name="mode" value="b"><b>担当アドバイザーと申込フォームを入力する</b><small id="enBDesc">入力したあと、本申込の前に確認のZoomを予約します</small></label>
     </form>
     <p class="err" id="enErr2" hidden></p>
     <button class="btn" type="button" id="enBook">Zoomの日時を選ぶ</button>
@@ -181,12 +181,14 @@
   $('go').addEventListener('click', register);
 
   /* ---------- お客様登録 ---------- */
-  var en = { r: '', a: '', mode: 'a', key: '', bookUrl: '' };
+  var en = { r: '', a: '', mode: 'a', z: '', key: '', bookUrl: '' };
   function radio(name) { var x = document.querySelector('input[name=' + name + ']:checked'); return x ? x.value : ''; }
   function setRadio(name, v) { var x = document.querySelector('input[name=' + name + '][value="' + v + '"]'); if (x) x.checked = true; }
   function entryStart(qs) {
     $('title').textContent = 'お客様のご登録'; document.title = 'お客様のご登録';
-    en.r = qs.get('r') || ''; en.a = qs.get('a') || ''; en.mode = qs.get('m') === 'b' ? 'b' : 'a';
+    en.r = qs.get('r') || ''; en.a = qs.get('a') || ''; en.mode = qs.get('m') === 'b' ? 'b' : 'a'; en.z = qs.get('z') || '';
+    // 確認Zoomなしのアドバイザー（z=0）は、Bの説明からZoomを外す（11/19）
+    if (en.z === '0') { $('enBDesc').textContent = '担当アドバイザーと一緒に、お申込みのお手続きを進めます'; $('enBNote').textContent = '担当アドバイザーと申込フォームを入力します。それまでに、LINEの準備リストをご準備ください。'; }
     return post({ action: 'entryInfo', r: en.r, a: en.a, m: en.mode, idToken: liff.getIDToken() }).then(function (r) {
       if (!r.ok) return fail(r.error);
       if (r.intro && r.intro.name) { $('enIntroName').textContent = r.intro.name; $('enIntroFixed').hidden = false; }
@@ -207,7 +209,7 @@
   $('enForm').addEventListener('submit', function (ev) {
     ev.preventDefault();
     var f = { action: 'entryRegister', idToken: liff.getIDToken(), name: $('enName').value.trim(), kana: $('enKana').value.trim(),
-      r: en.r, introName: $('enIntro').value.trim(), a: en.a, passport: radio('passport'), benef: radio('benef'), docs: radio('docs'), mode: en.mode };
+      r: en.r, introName: $('enIntro').value.trim(), a: en.a, z: en.z, passport: radio('passport'), benef: radio('benef'), docs: radio('docs'), mode: en.mode };
     var ng = !f.name ? 'お名前を入れてください。' : !f.kana ? 'フリガナを入れてください。'
       : !f.r && !f.introName ? 'ご紹介者のお名前を入れてください。' : !f.passport || !f.benef || !f.docs ? '3つの質問に答えてください。' : '';
     if (ng) { $('enErr').textContent = ng; $('enErr').hidden = false; return; }
