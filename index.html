@@ -132,7 +132,7 @@
       <span class="lbl">お申込みの進め方</span>
       <label class="opt"><input type="radio" name="mode" value="a"><b>Zoomでまとめて申し込む</b><small>サポート担当と一緒に、入力からお支払い・本申込まで（約60分）</small></label>
       <label class="opt"><input type="radio" name="mode" value="b"><b>今から担当アドバイザーと申込フォームを入力する</b><small id="enBDesc">このあと積立申込サイトを開きます。入力のあと、本申込の前に確認のZoomを予約します</small></label>
-      <label class="opt" id="enCOpt" hidden><input type="radio" name="mode" value="c"><b>準備をしてから、担当アドバイザーと日時を決めて入力する</b><small id="enCDesc">担当アドバイザーと申込フォームを入力する日時を予約します。入力のあと、本申込の前に確認のZoomを予約します</small></label>
+      <label class="opt" id="enCOpt" hidden><input type="radio" name="mode" value="c"><b>準備をしてから、担当アドバイザーと日時を決めて入力する</b><small id="enCDesc">LINEの準備リストで準備ができたら、担当アドバイザーと申込フォームを入力する日時を予約します。入力のあと、本申込の前に確認のZoomを予約します</small></label>
     </form>
     <p class="err" id="enErr2" hidden></p>
     <button class="btn" type="button" id="enBook">Zoomの日時を選ぶ</button>
@@ -191,7 +191,7 @@
     $('title').textContent = 'お客様のご登録'; document.title = 'お客様のご登録';
     en.r = qs.get('r') || ''; en.a = qs.get('a') || ''; en.mode = modeKey(qs.get('m')); en.z = qs.get('z') || '';
     // 確認Zoomなしのアドバイザー（z=0）は、B・Cの説明からZoomを外す（11/19）
-    if (en.z === '0') { $('enBDesc').textContent = 'このあと積立申込サイトを開いて、担当アドバイザーと一緒に入力します'; $('enCDesc').textContent = '担当アドバイザーと申込フォームを入力する日時を予約します'; }
+    if (en.z === '0') { $('enBDesc').textContent = 'このあと積立申込サイトを開いて、担当アドバイザーと一緒に入力します'; $('enCDesc').textContent = 'LINEの準備リストで準備ができたら、担当アドバイザーと申込フォームを入力する日時を予約します'; }
     return post({ action: 'entryInfo', r: en.r, a: en.a, m: en.mode, idToken: liff.getIDToken() }).then(function (r) {
       if (!r.ok) return fail(r.error);
       if (r.intro && r.intro.name) { $('enIntroName').textContent = r.intro.name; $('enIntroFixed').hidden = false; }
